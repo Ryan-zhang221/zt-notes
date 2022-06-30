@@ -1,6 +1,4 @@
 # zt-notes
-个人笔记
+学习路线思维导图：
 
-hello world
-
-hello git
+https://yupi.icu/星球资料/学习路线.html#前端学习路线
