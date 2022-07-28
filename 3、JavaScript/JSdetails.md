@@ -66,6 +66,60 @@
 
 ## 数据类型
 * 6中简单数据类型：`Undefined, Null, Boolean, Number, String, Symbol`
+
 * 1中复杂数据类型：`Object`
+
 * `typeof`操作符：确定任意变量的数据类型，返回值有以下："undefined"未定义、"boolean"布尔值、"string"字符串、"number"数值、"object"对象或null，"function"函数、"symbol"符号。
-* `undefined`详解：在变量声明后未初始化时，默认赋值undefined，一般来说，永远不用显式地给某个变量赋值undefined，字面值undefined主要是用来比较。ES3之前是不存在的，增加这个特殊值的目的就是为了正式明确空对象指针（null）和未初始化变量的区别。
+
+* `undefined`详解：在变量声明后未初始化时，默认赋值undefined，一般来说，永远不用显式地给某个变量赋值undefined，字面值undefined主要是用来比较。ES3之前是不存在的，增加这个特殊值的目的就是为了正式明确空对象指针（null）和未初始化变量的区别。注意一点：typeof操作符号对于"未声明变量"和"已声明变量但未初始化"两者的返回值都是"undefined"，故最好在声明变量时进行初始化。
+
+* `null`详解：null表示一个空对象指针，这也是为什么`typeof null`会返回一个"Object"的原因。只要变量要保存对象，但是现在又没有那个对象，这时就建议使用null来初始化。这样就可以通过检查这个值是不是一个null来判断这个变量后来是不是被赋值了。
+
+* `Boolean`详解：虽然布尔值只有两个，但是其余类型的值都可以转化为布尔值，调用特定的`Boolean()`函数，转化规则如下：
+
+  | 数据类型  | 转化为true的值 | 转化为false的值 |
+  | --------- | -------------- | --------------- |
+  | Boolean   | true           | false           |
+  | String    | 非空字符串     | ""(空字符串)    |
+  | Number    | 非零数值       | 0、NaN          |
+  | Object    | 任意对象       | null            |
+  | Undefined | 不存在         | undefined       |
+
+* `number`详解：经典`0.1 + 0.2 !== 0.3`问题，简单解决办法如下`parseFloat((1.0 - 0.9).toFixed(10)) 返回值为0.1`，其实就是控制精度。一个特殊的数值`NaN`意思为“Not a Number”，用于表示本来要返回数值的操作失败了（不是抛出错误），比如用0除以任何数的操作。`NaN`有几个独特的属性：任何涉及NaN的操作都会返回NaN，还有`isNaN()`函数的使用。数值转换：3个函数可以将非数值转换为数值：`Number()/parseInt()/parseFloat()`，其中Number可以将任何数据类型转换为数字，但是后两个主要是用于将字符串转换为数值。常用parseInt()函数。
+
+* `string`详解：toString()方法返回当前值的字符串等价物，null和undefined没有该方法。string()函数可以用来判断一个值是不是null或者undefined。如下
+
+  ```js
+  console.log(String(null)); // "null"
+  console.log(String(undefined)); // "undefined"
+  ```
+
+  模版字符串的使用"``"
+  
+* `symbol`详解：
+
+* `Object`数据类型：对象其实就是一组数组和功能的集合，每个对象都有如下属性和方法：
+
+  ```js
+  constructor
+  hasOwnProperty(propertyName)
+  isPrototypeOf(object)
+  toLocaleString()
+  toString()
+  valueOf()
+  ```
+
+
+
+
+
+
+
+
+
+## 操作符
+
+* 一元操作符
+* 位操作符
+* 布尔操作符：逻辑非`!`始终返回布尔值，可以同时使用两个`!!`，相当于调用了转型函数`Boolean()`，第一个！总会返回布尔值，第二个！对该布尔值取反，从而给出变量真正对应的布尔值；逻辑与`&&`可用于任何类型的操作数，不限于布尔值，它是一种短路操作符，只有第一个操作数为true的情况下才会对&&后面的求值，如果第一个操作数为false，那么他会直接跳过；逻辑或`||`如果有一个操作数不是布尔值，那么返回值也不一定是布尔值。它也有短路的特性，它是第一个操作数求值为true，第二个操作数就不会被求值了。
+
