@@ -1,4 +1,12 @@
 > 理解JSON最关键的一点就是把它当做一种数据格式，而不是编程语言。JSON不属于JavaScript，它们只是拥有相同的语法而已。JSON也不是只能在JavaScript中使用，它是一种数据格式，很多语言都有解析和序列化JSON的内置能力。
+>
+> 
+>
+> - JSON 是一种数据格式，具有自己的独立标准和大多数编程语言的库。
+> - JSON 支持 object，array，string，number，boolean 和 `null`。
+> - JavaScript 提供序列化（serialize）成 JSON 的方法 [JSON.stringify](https://developer.mozilla.org/zh/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify) 和解析 JSON 的方法 [JSON.parse](https://developer.mozilla.org/zh/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse)。
+> - 这两种方法都支持用于智能读/写的转换函数。
+> - 如果一个对象具有 `toJSON`，那么它会被 `JSON.stringify` 调用。
 
 
 
