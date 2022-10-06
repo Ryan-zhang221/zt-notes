@@ -601,6 +601,27 @@ https://github.com/Ryan-zhang221/ob-my-kanban.git
 
 
 > 文章链接：https://www.freecodecamp.org/news/the-beginners-guide-to-react-hooks/
+>
+> 什么是Hooks？
+>
+> Hooks 是 React 实现组件逻辑的重要方式，可以用来操作 state，定义副作用，更支持开发者自定义 Hooks。Hooks 借鉴自函数式编程，但同时在使用上也有一些限制。
+>
+> 我们不妨借助函数式编程中纯函数和副作用这两个概念，来理解什么是 Hooks。
+>
+> React 对 UI 的理想模型是 UI = f(state) ，其中 UI 是视图，state 是应用状态，f 则是渲染过程，比起类组件，函数组件更加符合这一模型。早期的函数组件功能与类组件还有不少的差距。
+>
+> 纯函数：我们把满足下面两点的函数就叫纯函数
+>
+> * 函数无论被调用多少次，只要参数相同，返回值就一定相同，这一过程不受外部状态或者 IO 操作的影响
+> * 函数被调用时不会产生副作用（Side Effect），即不会修改传入的引用参数，不会修改外部状态，不会触发 IO 操作，也不会调用其他会产生副作用的函数。
+>
+> 纯函数组件可以最直观地展示输入的 props 与输出的渲染元素之间的关系，非常利于开发者把握组件的层次结构和样式。
+>
+> 但需要知道，这样的纯函数组件除了 props、JSX 外，几乎不能使用 React 组件的所有其他特性——对于纯函数组件来说，这些其他特性全部都是外部状态或副作用。
+>
+> 反过来说，若想让函数组件使用这些其他特性，只要让它以某种方式，显式地访问函数的外部状态（应限制在 React 框架的范围以内，所以对 React 而言是内部状态），或者执行副作用就好了。
+>
+> Hooks 就是这样一套为函数组件设计的，用于访问 React 内部状态或执行副作用操作，以函数形式存在的 React API。注意，这里提到的“React 内部状态”是比组件 state 更广义的统称，除了 state 外，还包括后面课程中会详细讲解的 context、memo、ref 等。
 
 
 
@@ -613,11 +634,128 @@ https://github.com/Ryan-zhang221/ob-my-kanban.git
   * 状态变量
   * 更新状态的函数
 
-  如：const [count, setCount] = useState(0)   这里是进行了数组解构。
+  如：const [count, setCount] = useState(0)   这里是进行了数组解构，得到一个变量和一个函数。组件代码可以通过 count 变量来读取这个 state，当需要更新这个 state 时，则调用 setCount 函数，如 setCount(1)。每次组件更新，在渲染阶段都会再次调用这个 useState 函数，但它不会初始化 state，而是保持 count 的值是最新的。
+
+  一个组件内多个 useState 函数之间是通过 useState 的调用次数和顺序来决定的。
+
+  每次组件更新都会调用 useState，这其实是有性能隐患的，如果 useState 函数的参数过于复杂，比如 useState(fibonaci(40))，这时性能肉眼可见变差，我们还有一种设置默认值的方法就是传一个函数作为参数，useState 只在组件挂载时执行一次这个函数，此后组件更新时不会再执行，这下就可以这样写：useState(() => fibonaci(40))
+
+  好玩的是，state 更新函数，这里也就是 setCount 函数也可以传函数作为参数。一般情况下，是调用 state 更新函数后组件会更新，而不是反过来。所以 state 更新函数的调用频率没那么高，传函数参数也并不是为了优化性能。
+
+  在 React 18 里，更是为更新 state 加入了自动批处理功能，多个 state 更新函数调用会被合并到一次重新渲染中。
+
+  这个功能从框架上就保证了 state 变化触发渲染时的性能，但也带来一个问题，只有在下次渲染时 state 变量才会更新为最新值，如果希望每次更新 state 时都要基于当前 state 值做计算，那么这个计算的基准值有可能已经过时了。此时只需要把更新函数 set... 的参数改为传递一个函数，就可以保证更新函数使用最新的 state 值来计算新 state 值。
+
+  
+
+  state 更新的自动批处理是 React 确保组件基础性能的重要功能。假设没有批处理功能的话，两个 state 更新会触发两次间隔非常近的重新渲染，那前面的这次重新渲染对于用户来说，很有可能是一闪而过的，既没有产生实际交互，也没有业务意义。在此基础上，如果再加上前面这次渲染的成本比较高，那就更是一种浪费了。
+
+  
+
+* `useRef hook`
+
+  我们之前提到，在更新 state 值时，需要使用 state 更新函数，你可能会好奇，既然 useState 返回了 state 值，我们直接修改 state 变量，也就是 count 不行吗？为什么必须要调用 useCount 函数呢？
+
+  如此操作，浏览器会直接报错：invalid assignment to。。。
+
+  我们之前提到过，porps 和 state 都是不可变的
+  
+  那么，我们如果需要可变值怎么办，答案是我们可以使用 useRef 这个 hook ，我们通过在 React 组件中访问真实 DOM 元素来介绍 useRef 的用法。
+  
+  ```js
+  import React, { useEffect, useRef, useState } from 'react';
+  // 添加新卡片组件
+  const KanbanNewCard = ({ onSubmit }) => {
+  
+    const [title, setTitle] = useState('')
+    const handleChange = (evt) => {
+      setTitle(evt.target.value)
+    }
+    const handlekeyDown = (evt) => {
+      if (evt.key === 'Enter') {
+        onSubmit(title)
+      }
+    }
+  
+    // 自动文本输入设置页面焦点
+    const inputElem = useRef(null);
+    useEffect(() => {
+      inputElem.current.focus();
+    }, []) // 这里传递空数组是为了让该 hook 只在第一次渲染时运行一次
+  
+    return (
+      <li className='kanban-card'>
+        <h3>添加新卡片</h3>
+        <div className='card-title'>
+          <input type="text" value={title} ref={inputElem}
+            onChange={handleChange} onKeyDown={handlekeyDown} />
+        </div>
+      </li>
+    )
+  }
+  ```
+  
+  我们调用 useRef 会返回一个可变 ref 对象，而且会保证组件每次重新渲染过程中，同一个 useRef hook 返回的可变 ref 对象都是同一个对象。
+  
+  可变 ref 对象有一个可供读写的 current 属性，组件重新渲染本身不会影响 current 属性的值；反过来，变更 current 属性值也不会触发组件的重新渲染。
+  
+  HTML 元素的 ref 属性，这个属性是 React 特有的，不会传递给真实的 DOM 。当 ref 属性的值是一个可变的 ref 对象时（ref={inputElem}），组件在挂载阶段，会在 HTML 元素对应的真实 DOM 元素创建后，将它赋值给可变 ref 对象的 current 属性（inputElem.current）；在组件卸载，真实 DOM 销毁之前，也会把 current 属性设置为 null。
+  
+  再接下来就是 useEffect(func, []) ，这种使用方法会保证 func 只在组件挂载的提交阶段执行一次，接下来的组件更新时不会再执行。
+  
+  这三个特性串起来，就让 KanbanNewCard 组件在挂载时，将 的真实 DOM 节点赋值给 inputElem.current，然后在处理副作用时从 inputElem.current 拿到这个真实 DOM 节点，命令式地执行它的 focus() 方法设置焦点。
+
+
+
+* 什么是副作用？
+
+  计算机领域的副作用是指：当调用函数时，除了返回可能的函数值以外，还对主调用函数产生附加的影响。例如修改全局变量，修改参数，向主调方、管道输出字符或改变外部存储信息等。
+
+  总之，副作用就是一个让 ***函数不再是纯函数*** 的各类操作。
+
+  注意，这个概念并不是贬义的，在 React 中，大量行为都可以被称作副作用，比如：挂载、更新、卸载组件、事件处理、添加定时器、修改真实 DOM、请求远程数据、在 console 中打印调试信息等。
+
+  上述 state 其实是绑定在组件函数之外的 FiberNode 上。这让你想到了什么？没错，就是函数执行 state 其实从逻辑上说也是一种副作用。
 
 
 
 * `useEffect hook`
+
+  面对上述所说那么多的副作用，React 大方提供了 useEffect 这个执行副作用操作的 hook。当你打算在函数组件中加入副作用时，useEffect 基本上会成为你的首选，同时也建议务必把副作用放在 useEffect 中执行，而不是直接放在组件的函数体中，这样可以避免很多难以调试的 bug。
+
+  这个 hook 有好几种用法：
+
+  * 只传入一个没有返回值的 ***副作用回调函数***     useEffect(() => { ... })
+
+    虽然 useEffect 作为函数体的一部分，在每次组件渲染（包括挂载和更新阶段）时都会被调用，但作为参数的副作用回调函数是在提交阶段才会被调用的，这时副作用回调函数可以访问到组件的真实 DOM。虽然这是最简单的用法，但现实中的用例反而比较少：毕竟每次渲染后都会被调用，如果使用不当，容易产生性能问题。
+
+  * 副作用的条件执行（最常用）：传入一个依赖值数组作为第二个参数
+
+    useEffect(() => {}, [var1, var2, var3])
+
+    React 在渲染组件时，会记录当时的依赖值数组，下次渲染时会把依赖值数组里的值依次与前一次记录下来的值作浅对比。如果有不同，才会在提交阶段执行副作用回调函数，否则就跳过这次执行，下次渲染时再继续比对依赖值数组。
+
+    依赖值数组里可以加入 props、state、context 值。一般来说，只要副作用回调函数中用到了自已范围之外的变量，都应该加入到这个数组里，这样 React 才能知道应用状态的变化和副作用间的因果关系。
+
+    ```js
+    
+    //   ------------   --------------
+    //   | 省份... |v|   | 城市...  |v|
+    //   ------------   --------------
+    
+    const [province, setProvince] = useState(null);
+    const [cities, setCities] = useState([]);
+    useEffect(() => {
+      if (province === '山东') {
+        // 这些数据可以是本地数据，也可以现从服务器端读取
+        setCities(['济南', '青岛', '淄博']);
+      }
+    }, [province]);
+    ```
+
+    空数组[]也是一个有效的依赖值数组，由于在组件生命周期中依赖值不会有任何变化，所以副作用回调函数只会在组件挂载时执行一次，之后不论组件更新多少次，副作用都不会再执行。这个用法可以用来加载远程数据。
+
+  
 
   用于取代 React 类的生命周期方法，可以把 useEffect hook 视作 componentDidMount、componentDidUpdate、componentWillUnmount 生命周期方法都组合在一个函数中，它允许在功能组件中复制 React 的生命周期方法
 
@@ -675,8 +813,5 @@ https://github.com/Ryan-zhang221/ob-my-kanban.git
   const value = useContext(SomeContext)
   ```
   
-  它接受通过 React.createContext 创建的 context 对象，并返回当前的 context
+  它接受通过 React.createContext 创建的 context 对象，并返回当前的 context 
 
-
-
-* 尴尬滴
