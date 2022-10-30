@@ -202,11 +202,43 @@ Vue2.x中的生命周期有以下：
 
 
 
+created 和 mounted 的理解和区别：
+
+https://juejin.cn/post/7063098432184909832
+
+created在模板渲染成html前调用
+
+mounted在模板渲染成html后调用
+
+
+
+浏览器简单渲染流程
+
+- 构建DOM树
+- 构建css规则树,根据执行顺序解析js文件。
+- 构建渲染树Render Tree
+- 渲染树布局layout
+- 渲染树绘制
+
+
+
+阶段详解
+
+beforeCreate阶段：对浏览器来说，整个渲染流程尚未开始或者说准备开始，对vue来说，实例尚未被初始化，data observer和 event/watcher也还未被调用，在此阶段，对data、methods或文档节点的调用现在无法得到正确的数据。
+
+created阶段：对浏览器来说，渲染整个HTML文档时,dom节点、css规则树与js文件被解析后，但是没有进入被浏览器render过程，上述资源是尚未挂载在页面上，也就是在vue生命周期中对应的`created`阶段，实例已经被初始化，但是还没有挂载至 **$el**上，所以我们无法获取到对应的节点，但是此时我们是可以获取到vue中data与methods中的数据的
+
+beforeMounted阶段：实际上与`created`阶段类似，节点尚未挂载，但是依旧可以获取到data与methods中的数据。
+
+mounted阶段：对浏览器来说，已经完成了dom与css规则树的render，并完成对render tree进行了布局，而浏览器收到这一指令，调用渲染器的paint（）在屏幕上显示，而对于vue来说，在`mounted`阶段，vue的**template成功挂载在$el中**，此时一个完整的页面已经能够显示在浏览器中，所以在这个阶段，即可以调用节点了（关于这一点，在笔者测试中，在mounted方法中打断点然后run，依旧能够在浏览器中看到整体的页面）。
+
+
+
 什么场景下使用？
 
-created：一般是用于请求接口
+created：一般是用于请求接口，通常用于**初始化某些属性值**，例如data中的数据，然后再渲染成视图。
 
-mounted：主要是用来操作 dom
+mounted：主要是用来操作 dom，通常在初始化页面完成后，**对html的dom节点进行需要的操作**。
 
 updated：观测数据是否更新，页面上内容发生了变动后使用。注意，beforeUpdate 和 updated 里面获取修改前后的值时，获取到的都是修改后的值
 
@@ -228,13 +260,13 @@ this.$el  ——>  当前组件的节点（dom）其实就是 template 中
 
 1. 第一次进入页面（组件）会执行哪些声明周期？
 
-   beforeCreate：    没有 this.$data❌ ，没有 this.$el❌
+   beforeCreate：    没有 this.$data❌ ，没有 this.$el❌，没有methods❌
 
-   created：                 有 this.$data✅ ，没有 this.$el❌
+   created：                 有 this.$data✅ ，没有 this.$el❌，有methods✅
 
-   beforeMount：        有 this.$data✅ ，没有 this.$el❌（其实已经在准备了）
+   beforeMount：        有 this.$data✅ ，没有 this.$el❌，有methods✅
 
-   mounted：               有 this.$data✅，有 this.$el✅
+   mounted：               有 this.$data✅，有 this.$el✅，有methods✅
 
 
 
@@ -290,7 +322,9 @@ router.get('/list', function(req, res, next){
 
 要么前端解决，要么后端解决
 
-我们的解决办法就是设置代理解决：（注意：这个方法在生产环境是不生效的！！！）
+后端的解决办法：直接在小鹿线官网——博客——搜索node.js解决跨域问题——把代码复制到接口所在 index.js 文件内即可
+
+我们前端的解决办法就是设置代理解决：（注意：这个方法在生产环境是不生效的！！！）
 
 * 打开项目vue.config.js文件
 
@@ -312,11 +346,288 @@ router.get('/list', function(req, res, next){
 
 
 
+由于我们跨域问题只能 开发环境 生效，而我们 npm run build 打包之后，也就是到了 生产环境，这个跨域问题是没有解决的（代理不生效）那么我们应该怎么做呢？
+
+我们要引出一个东西叫——环境变量
+
+环境变量🈯️ 随着环境的改变，你这个值也会跟着变。开发 和 生产 环境不同，那么这个值也不同。
+
+我们在项目根目录中创建两个文件： .env.develoment 文件和 .env.production 文件
+
+我们如果使用 npm run dev 就会运行这个文件 .env.develoment 中代码，同理，如果我们使用 npm run build 那么就会运行 .env.production 这个文件代码。
+
+.env 文件中属性名必须以 VUE_APP_ 开头，且不要 const let var 这些来声明变量
+
+```
+VUE_APP_BASE_URL = localhost:3000
+```
+
+项目中如何调用 .env 文件中的变量呢？  必须使用 process.env.VUE_APP_XXX 这种方式来调用
+
+
+
 
 
 
 
 ## axios的二次封装
+
+
+
+基本步骤如下：
+
+下载引入 axios
+
+创建 axios 对象
+
+请求拦截器
+
+响应拦截器
+
+返回 axios 对象
+
+
+
+
+
+## $nextTick 和 Ref
+
+
+
+```vue
+<script>
+export default {
+  created() {
+    console.log('created')
+    getData().then(res => {
+      console.log('res', res)
+    })
+  },
+  mounted() {
+    console.log('mounted')
+  }
+}
+</script>
+```
+
+注意以上代码，我们可以知道，打印顺序是 created、mounted、res ，为什么是这样呢？因为 JS 的逻辑是等所有的同步代码执行完毕之后再执行异步代码。所以我们请求接口的信息是最后打印的。并且，由于 created 阶段是没有 $el 的，所以无法访问真实 dom，但是 created 里面的接口中反而可以访问真实 dom 的原因也是如此。
+
+因此引出了一个问题，我们如果在接口里面访问真实 dom 高度时，由于渲染需要时间，异步函数执行时 dom 没有更新完成，这时获取的高度就会是 0 ，因此引出了 $nextTick 方法
+
+$nextTick方法是 🈯️ 获取更新后的 dom ，也就是说这个步骤是在整个页面的所有操作都完成之后才调用的 （除了手动操作）。我们用 JS 来理解的话就是 window.onload() 方法，这个方法用于在网页加载完毕后立刻执行的操作。（因为 JavaScript 中的函数方法需要在 HTML 文档渲染完成后才可以使用，如果没有渲染完成，此时的 DOM 树是不完整的，这样在调用一些 JavaScript 代码时就可能报出"undefined"错误。）
+
+这里插入一张图片
+
+![](https://www.runoob.com/wp-content/uploads/2019/05/20171231003829544.jpeg)
+
+
+
+$nextTick 的原理简单理解：Vue 类中增加了一个 $nextTick 方法，这个方法返回了一个 promise 即可。
+
+```js
+Class Vue{
+  constructor(options) {
+    this.$data = options.data;
+    options.created.bind(this)();
+   	this.$el = document.querySelector(options.el);
+    options.mounted.bind(this)();
+  }
+  $nextTick(callback) {
+    return Promise.resolve().then(() => {
+      callback()
+    })
+  }
+}
+```
+
+
+
+现在来看下简便获取 dom 的方法：ref
+
+我们之前获取 dom 的方法都是使用 document.getElementById('box') 这种方式，比较原始
+
+现在我们可以给 html 中的元素加上 ref='xxx' ，比如 `<div ref='box'></div>`，然后我们在 vue 中使用 this.$refs.box 或者 this.$refs['box'] 这两种方法来方便获取，多个也可以如此获取。
+
+
+
+
+
+
+
+## 组件传值
+
+
+
+父传子
+
+
+
+父组件如何传递
+
+1. 死数据
+
+   `<Header msg="这是父组件的数据"></Header>`
+
+2. 活数据：单向绑定
+
+   ```js
+   <Header :msg="str"></Header>
+   
+   data() {
+     return {
+   		str: 'hello world'
+     }
+   }
+   ```
+
+
+
+子组件如何接收
+
+1. 数组形式
+
+   ```vue
+   <script>
+   export default {
+   	props: ['msg']
+   }
+   <script>
+   ```
+
+   
+
+2. 对象形式
+
+   ```vue
+   <script>
+   export default {
+   	props: {
+       msg: {
+         type: String,
+         default: 'msg'
+       },
+       aaa: {
+         type: Number,
+         default: 'aaa'
+       }
+     }
+   }
+   <script>
+   ```
+
+
+
+这里有一点需要注意：我们从父组件传过来的值，子组件中是不允许修改的，父组件传过来的值我们可以通过 this. 的方式获取到，但是，这个值并没有加入我们子组件的 $data 中，我们打印此时的 this 可以看到。
+
+但是！要注意，如果父组件传递过来的值是一个 对象Object 或者 数据Array 的话，我们在子组件中通过 this. 的方式不仅可以获取还可以修改。但是不建议修改。因为引用类型传递过来只是一个内存地址，而实际的值是保存在堆内存里面的，凡是能拿到内存地址的都可以去修改，而且改了之后，引用的所有都会改变。这也是 vue2 的一个问题。
+
+
+
+
+
+子组件传值给父组件：通过自定义事件来传递
+
+
+
+子组件传递
+
+```vue
+<button @click="click">
+  点击发送给父组件
+</button>
+<script>
+export default {
+  data() {
+    return {
+      msg: '子组件数据'
+    }
+  }，
+  methods: {
+  	click() {
+			this.$emit('btnClick', this.msg)
+    }
+	}
+}
+</script>
+```
+
+
+
+这里的 `this.$emit('btnClick', this.msg)`可以理解为是这样 `xx.btnClick = function(this.msg){}`
+
+
+
+
+
+父组件接收
+
+```vue
+<Header @btnClick="change"></Header>
+<script>
+export default {
+  methods: {
+    change(val) {
+      console.log(val)
+    }
+  }
+}
+</script>
+```
+
+
+
+
+
+
+
+兄弟组件传值——————————————————
+
+
+
+前提需要创建一个 bus.js 文件作为总线程
+
+```js
+import Vue from 'vue'
+export default new Vue();
+```
+
+
+
+A兄弟 传递：
+
+```vue
+<button @click='btn'>
+ 	传递
+</button>
+<script>
+import bus from '@/utils/bus'
+export default {
+  methods: {
+    bus.$emit('brotherCheck', 'A的数据')
+  }
+}
+</script>
+```
+
+
+
+B兄弟 接收：
+
+```js
+bus.$on('brotherCheck', val => {
+  console.log(val)
+})
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
