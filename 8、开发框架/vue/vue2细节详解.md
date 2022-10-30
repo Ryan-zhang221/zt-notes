@@ -625,7 +625,78 @@ bus.$on('brotherCheck', val => {
 
 
 
+## vue路由
 
+
+
+router 的文档：https://v3.router.vuejs.org/zh/zpi
+
+路由就是用来负责跳转页面的
+
+vue.js + vue Router 创建的是 单页面应用（SPA）：整个项目只有一个 index.html
+
+单页面应用的缺点：不适合 SEO。优点：适合我们的后台管理系统
+
+
+
+我们直接创建vue项目的时候，选择好 router 这一项，这样创建的项目就会自动给我们配置好相关的路由。
+
+
+
+我们在 router 文件夹中的 index.js 文件中配置对应路由时有两种方式：直接引用和懒加载
+
+```js
+const route = [
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: () => import('../component/about.vue')
+  }
+]
+```
+
+
+
+懒加载的好处就是：当打包构建应用时，js包会变得特别大，影响页面加载。如果我们能把不同路由对应的组件分割成不同的代码块，然后当路由被访问的时候才加载对应组件，这样就更加高效了。结合 vue的异步组件 和 webpack 的代码分割功能，可以轻松实现路由懒加载。
+
+所以基本上除了首页都是懒加载
+
+
+
+路由的模式
+
+1. history
+
+   ```js
+   const router = new VueRouter({
+     mode: 'history',
+     base: ...
+   })
+   ```
+
+   
+
+2. hash
+
+   ```js
+   const router = new VueRouter({
+     mode: 'hash',
+     base: ...
+   })
+   ```
+
+
+
+两个的区别：
+
+找不到路由的情况下：history 会发送一次 get 请求，而 hash 则不会
+
+表现形式：hash 多带了一个 # ，而 history 则没有
 
 
 
