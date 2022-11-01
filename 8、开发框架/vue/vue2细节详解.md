@@ -702,9 +702,648 @@ const route = [
 
 
 
+router-link
+
+router-link 是写在 template 部分的，用来跳转页面，写法`<router-link to='/对应的页面'></router-link>`，这是系统自带的一个组件。
+
+它还有一些参数如下：
+
+to：用来跳转页面的，表示目标路由的链接，这里的 to 可以进行单向绑定，我们可以用 JS 控制
+
+tag：可以渲染成任意标签，比如加上 tag="h1"，那么点击这个 h1 标签就会发生跳转，默认 a 链接
+
+replace：设置这个属性的话，页面无法返回上一页，也就是不会留下 history 记录
 
 
 
+router-view
+
+系统自带的一个组件，就是一个容器，防止匹配到的路由组件的地方。
+
+
+
+路由懒加载分包
+
+```js
+const routes = [
+  {
+    path: '/course',
+    name: 'course',
+    component: () => import(/* webpackChunkName: 'course' */ '../course.vue')
+  }
+]
+```
+
+/* webpackChunkName: 'course' */ 这一段就是用来让 webpack 打包的，打包后的 js 文件前缀就是我们这里输入的 这个值。
+
+
+
+配置 404 页面
+
+我们先单独新建一个 404.vue 文件，然后引入到 router/index.js 下，这里使用 * 通配符就是说上面的都找不的话就展示这个页面。
+
+```js
+import 404Page from '...'
+const routes = [
+  {
+    path: '*',
+    component: 404Page
+  }
+]
+```
+
+
+
+子路由
+
+项目不一定需要，但是子路由方便管理
+
+配置的话就是在路由文件里面某个页面下面加上 children :[...] 即可
+
+
+
+动态路由
+
+也不是必须的，配置的话如下
+
+```js
+const routes = [
+  {
+    path: '/news',
+    name: 'news',
+    children: [
+      {
+        path: '/news/:id',
+        name: 'newsId',
+        component: ()=>import('../views/newsDetail')
+      }
+    ]
+    component: () => import('../views/news.vue')
+  }
+]
+```
+
+
+
+
+
+路由导航守卫
+
+什么是？一句话简单理解就是，我从 a 是否能进入到 b 页面，比如我们需要进入一个页面前需要判断身份（是否登录），如果登录状态下可以进入，如果没有登录则不可以进入（跳转登录页面）
+
+路由独享导航守卫（用的最多）
+
+使用如下，我们在路由对象中声明 beforeEnter 函数，其中的参数 to、from、next 分别是去哪个页面、从哪个页面去、继续函数
+
+```js
+const routes = [
+  {
+    path: '/home',
+    name: 'home',
+    beforeEnter: (to, from, next) => {
+      next()
+    }
+  }
+]
+```
+
+
+
+全局导航守卫（其次）
+
+beforeEach
+
+beforeResolve
+
+afterEach
+
+
+
+组件内导航守卫（用的最少）
+
+beforeRouteEnter
+
+beforeRouteUpdate
+
+beforeRouteLeave
+
+
+
+
+
+
+
+## vuex
+
+什么是 vuex：集中式存储管理，存储的东西有：全局共享的属性，全局共享的方法...
+
+使用场景：多个组件共用某一个值的时候，组件传值可能很繁琐，此时用全局共享的话比较方便，数据统一管理好维护
+
+vuex中的属性：
+
+* state              有点像组件的data，用来存放共享数据的
+* getters           有点像组件的 computed，计算 state 的
+* mutations      有点像组件的 methods ，放全局共享方法的
+* actions
+* modules
+
+
+
+基本使用：
+
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.store({
+  state: {
+    str1: '这是全局共享的属性',
+    num: 0,
+    number: 1
+  },
+  getters: {
+    changeStr1() {
+      return 1212
+    },
+    getStr(state) {
+      return state.str1
+    }
+  },
+  mutations: {
+    add() {
+      state.num++;
+    }
+  },
+  actions: {
+    addNumber({commit, state}) {
+      state.number++;
+    }
+  },
+  modules: {}
+})
+```
+
+state使用方法一：我们在 store/index.js 文件夹下的 state 中声明一个  str1 变量，然后我们在别的组件中要使用的话，可以不引入，直接通过 $store.state.str1 来使用。在 JS 部分可以通过 this.$store.state.str1 来使用。
+
+state使用方法二：
+
+```vue
+<template>
+	<div>
+    {{ str1 }}
+  </div>
+</template>
+
+<script>
+  import { mapState } from 'vuex'
+  export default {
+    computed: {
+      ...mapState(['str1'])
+    }
+  }
+</script>
+```
+
+
+
+以上两者的区别是：方式一是直接使用的 vuex 中的 state 的源头。而方式二是把 vuex 中的 state 复制了一份到 mapState 中，由此可以知道，**方式一是可以直接修改 vuex 中的值的**。而方式二就不能直接修改 vuex 中的数据。	
+
+
+
+getters用法一：同state，直接 this.$store.getters.changeStr1 使用即可
+
+getters用法二：辅助函数形式，注意这里的调用方式是 this.changeStr1 而不是 state 中直接的 str1
+
+```vue
+<template>
+	<div>
+    {{ this.changeStr1 }}
+  </div>
+</template>
+
+<script>
+  import { mapGetters } from 'vuex'
+  export default {
+    computed: {
+      ...mapGetters(['changeStr1'])
+    }
+  }
+</script>
+```
+
+我们组件的 computed 有两种写法，一种是方法，另一种是一个对象，里面有 get 和 set  函数。但是 getters 里面是不允许 set 和 get 这种写法的。因为 vuex 是单向数据流，我们如果使用 v-modal 绑定会报错。
+
+getters 中的方法都可以传递参数，比如我们可以把 vuex 的 state 传入进去，相当于一个二次计算。本质和组件的 computed 一样。
+
+
+
+mutations基本用法
+
+用法一：
+
+```vue
+<template>
+	<div>
+    <button @click='add'></button>
+  </div>
+</template>
+
+<script>
+  import { mapMutations } from 'vuex'
+  export default {
+    methods: {
+      ...mapMutations(['add'])
+    }
+  }
+</script>
+```
+
+我们引入进来 mapMutations 然后在 methods 中使用，button 按钮的点击事件就可以正常使用这个方法了，当然也可以传递值过去。但是注意，只能传递一个值，如果要传递多个值，记得搞成一个对象。
+
+用法二：
+
+```vue
+<template>
+	<div>
+    <button @click='btn'></button>
+  </div>
+</template>
+
+<script>
+  export default {
+    methods: {
+      btn() {
+        this.$store.commit('add')
+      }
+    }
+  }
+</script>
+```
+
+我们通过 commit 的方式提交 mutations
+
+
+
+actions基本用法
+
+用法一：
+
+基本和 mutations 类似，也是用来存放方法，但是注意一点：我们传递参数的时候必须是一个 ({ commit, state }){} 这个形式，就是说必须传入一个 commit 参数进去，而且是要用 对象的形式传递。
+
+```vue
+<template>
+	<div>
+    <button @click='addNumber'></button>
+  </div>
+</template>
+
+<script>
+  import { mapActions } from 'vuex'
+  export default {
+    methods: {
+      ...mapActions(['addNumber'])
+    }
+  }
+</script>
+```
+
+用法二：直接使用 dispatch 来提交，同样可以携带参数
+
+```vue
+<template>
+	<div>
+    <button @click='addNumber'></button>
+  </div>
+</template>
+
+<script>
+  export default {
+    methods: {
+      btn() {
+        this.$store.dispatch('addNumber')
+      }
+    }
+  }
+</script>
+```
+
+
+
+
+
+总结：mutations 可以通过 commit 来提交，actions 可以通过 dispatch 提交。那么 mutations 和 actions 的区别就是：
+
+* mutations 只能是同步操作，而 actions 可以包含任何异步操作
+* actions 提交的是 mutations，而不是直接变更状态。
+
+有一个问题：actions 可以直接修改 state 属性值吗 ？ 答案是可以的，但是不建议这样写。
+
+那我们应该怎么做呢？
+
+mutations 里面实现逻辑，actions 里面来提交 mutations
+
+```js
+import Vue from 'vue'
+import Vuex from 'vuex',
+  
+Vue.use(Vuex)
+
+export default new Vuex.store({
+  state: {
+    num: 1
+  },
+  getters: {},
+  mutations: {
+    add(state) {
+      state.num++;
+    }
+  },
+  actions: {
+    total({commit, state}) {
+      commit('add')
+    }
+  }
+})
+```
+
+actions 不直接修改状态，修改状态而是要通过 mutations 来修改。
+
+
+
+
+
+modules 把整个状态管理再次细分，主要取决于你项目的大小，大的话要细分就用，不大就不用
+
+我们在 store 目录下新建一个 modules 文件夹，里面存放多个 js 文件，每个文件就是一个部分在 vuex 中管理的数据，相当于我们把 index.js 文件中的 state 细分为了多个。然后我们在 index.js 文件中引用这些文件，这时我们使用的时候，就可以不使用 state 的这种形式：...mapState(['xxxx', 'yyyyy']) ，而是可以改写为一个对象，然后其中写法如下：
+
+```js
+computed: {
+  ...mapState({
+    组件自定义属性名: state => state.模块.具体属性名
+  })
+}
+```
+
+
+
+
+
+vuex 的持久化存储
+
+面试题：当某一个组件使用了 vuex 的数据，比如 1 改为了 2，但是刷新页面又到了 1 该怎么办？
+
+vuex 是一个集中式的状态管理工具，本身不是持久化存储，如果要实现持久化存储，可以：
+
+* 自己写 localStorage
+
+  ```js
+  export defalut {
+    state: {
+      num: localStroage.getItem('num') || 1
+    },
+    mutations: {
+      add (state) {
+        state.num++;
+        localStorage.setItem('num', state.num)
+      }
+    }
+  }
+  ```
+
+  
+
+* 使用插件
+
+  小鹿线官网博客搜索：vuex持久化存储插件
+
+
+
+面试题：在某个组件中可以直接修改 vuex 的状态（数据 state）吗？
+
+可以
+
+方法一：通过 mutations 方法来修改
+
+方法二：组件直接修改 vuex 数据源 this.$store.state.shop.num = 12
+
+不可以的方式：
+
+* 直接使用辅助函数：比如 this.num = 12
+
+
+
+
+
+
+
+面试题：vuex 中的 getters 属性在组件中被 v-modal 绑定会发生什么？
+
+面试题：vuex 是单向数据流还是双向数据路？
+
+如果修改了会报错，因为vuex 是单向数据流
+
+
+
+
+
+
+
+## 插槽
+
+
+
+匿名插槽：插槽没有名字
+
+父：
+
+```vue
+<template>
+	<HelloWorld>
+    <p>111</p>    这个p元素就对应了子组件里面的 slot
+  </HelloWorld>
+</template>
+```
+
+子：
+
+```vue
+<template>
+	<div>
+    <slot></slot>
+    <input type="text" />
+  </div>
+</template>
+```
+
+
+
+
+
+具名插槽：如果有多个插槽的情况下就需要给每个插槽命名，方便我们确定位置，还可以传递数据
+
+父：
+
+```vue
+<template>
+	<HelloWorld>
+    <template #one="user">
+			<p>111 {{user}} </p>
+		</template>
+    <template #two>
+			<p>222</p>
+		</template>
+  </HelloWorld>
+</template>
+```
+
+子：
+
+```vue
+<template>
+	<div>
+    <slot name="one" :user="user"></slot>
+    <input type="text" />
+    <slot name="two"></slot>
+  </div>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      user: {name:'ryan', age:16}
+    }
+  }
+}
+</script>
+```
+
+
+
+作用域插槽：可以传递数据的插槽，如上例子
+
+
+
+
+
+
+
+## 查找组件 $parent $root $children
+
+
+
+查找父组件：
+
+this.$parent ====》 返回当前组件的父组件实例
+
+this.$root =====> 返回根组件，即当前实例的父实例，如果没有，此实例将会是自己
+
+
+
+查找子组件：
+
+this.$children  ======> 返回当前组件所有子组件实例（列表形式），并且可以拿到子组件data中的数据，也可以修改。
+
+
+
+面试题：如果父组件想直接修改子组件的数据怎么办？
+
+答：this.$children[0].xxx = 'aaaa'
+
+
+
+ref 我们之前学过，是用来获取 dom 的，我们可以通过这种方式变相的获取子组件实例
+
+先在父组件引入子组件的标签中加入 ref 
+
+```vue
+<News ref='child'></News>
+```
+
+然后获取方式：this.$refs.child
+
+修改子组件数据：this.$refs.child.xxx = 'bbb'
+
+
+
+
+
+$set的用法：当修改一个响应式数据的时候，数据本身改变了但是视图没有更新，这时使用 $set 进行更新
+
+如下这种情况，我们点击之后 arr 数组已经改变，但是视图层并没有更新，此时就是 $set 的使用场景了
+
+修改方法：this.$set( 目标，修改的key或下标，修改后的值 )
+
+```vue
+<template>
+	<div>
+    {{ arr }}
+  </div>
+	<button @click='change'></button>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      arr: ['a', 'b', 'c']
+    }
+  },
+  methods: {
+    change() {
+      this.arr[1] = 'xxxx'
+      
+	    // 下面这种方式就可以改掉
+      // this.$set(this.arr, '1', 'xxxx')
+    }
+  }
+}
+</script>
+```
+
+
+
+
+
+## 依赖注入 provide、inject
+
+
+
+某组件可以直接向它下面的组件传值，没有组件的父子限制
+
+使用方法：
+
+父：
+
+```vue
+<script>
+export default {
+  provide() {
+    return {
+      str: 'hello'
+    }
+  }
+}
+</script>
+```
+
+子：
+
+```vue
+<template>
+	<div>
+    {{str}}
+  </div>
+</template>
+
+<script>
+export default {
+  inject: ['str']
+}
+</script>
+```
+
+它有一个问题就是子组件不知道这个数据是从谁那里传过来的
 
 
 
