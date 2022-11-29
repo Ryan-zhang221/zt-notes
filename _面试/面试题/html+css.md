@@ -53,3 +53,74 @@ overflow：hidden
 px像素单位
 
 em相对单位：相对于自身的 font-size 大小，如果自身么有，就找夫元素，如果还没有就，则继续向外查找
+
+
+
+
+
+## css flex 布局
+
+
+
+## css grid 布局
+
+
+
+## css 中的单位
+
+
+
+
+
+## 选择器的优先级
+
+
+
+
+
+## 盒模型
+
+标准：盒子占位 `w = width + 2margin + 2padding + 2border`
+
+怪异：盒子占位 `w = width(content+2padding+2border) + 2margin`
+
+
+
+## css 常用布局
+
+单列、双列、三列、水平垂直居中、圣杯布局、双飞翼布局
+
+
+
+## css实现垂直居中的方式
+
+
+
+## 伪类和伪元素
+
+
+
+## BFC以及如何开启BFC
+
+
+
+## css3新特性
+
+
+
+## less scss 使用
+
+
+
+
+
+## web worker
+
+
+
+## web socket
+
+
+
+## HTML5新特性
+

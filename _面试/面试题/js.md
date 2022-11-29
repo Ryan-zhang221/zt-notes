@@ -564,3 +564,11 @@ JSON.parse() JSON.stringfy() 方法存在兼容性问题，低版本浏览器可
 
 
 
+
+
+## localStorage sessionStroage cookie 区别
+
+
+
+
+
