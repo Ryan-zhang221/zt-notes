@@ -12,7 +12,11 @@
 
 
 
+为什么使用 require 引入而不是 import？
 
+按照约定发布到 npm 的代码都是基于 Commonjs 的 es5 语法的代码，所以只能使用 require。
+
+使用 import 时报错信息如下：`To load an ES module, set "type": "module" in the package.json or use the .mjs extension.`
 
 
 
